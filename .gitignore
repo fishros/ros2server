@@ -1,0 +1,5 @@
+temp/po/*
+temp/*.db
+backup/*
+*.po
+*.pyc
