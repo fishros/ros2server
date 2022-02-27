@@ -1,20 +1,15 @@
 # -*- coding: utf-8 -*-
-import email
-from operator import le
-import re
-from unicodedata import name
-from unittest import result
 from flask import Flask, request, jsonify,make_response
 import json
 import time
 import threading
 import queue
 
-from myscript import mycmd,db2po
+from myscript import mycmd,db2po2
 from myscript.orm import *
 
 import spdlog
-logger = spdlog.FileLogger('webhook', f"./calib_server_{time.strftime('%Y-%m-%d-%H:%M:%S')}.log", False,False)
+logger = spdlog.FileLogger('calib_server', f"./log/calib_server_{time.strftime('%Y-%m-%d-%H:%M:%S')}.log", False,False)
 
 app = Flask(__name__)
 app.debug = False
@@ -45,22 +40,12 @@ def gen_po():
         if command_queue.qsize()>0:
             changes = []
             while command_queue.qsize()>0: 
-                changes.append(command_queue.get() )
-            print("start_thread")
-            msgid,name,email,github,operate = changes[0]
+                changes.append(command_queue.get())
             mycmd.CmdTask(f"cp data.db temp/data_temp.db").run()
-            db2po.gen_po(changes)
-            mycmd.CmdTask(f"git reset --hard && git checkout master",cwd="../ros2po/").run()
-            mycmd.CmdTask(f"cp temp/po/* ../ros2po/").run()
-            mycmd.CmdTask(f'git config --local user.name "{name}"',cwd="../ros2po/").run()
-            mycmd.CmdTask(f'git config --local user.email "{email}"',cwd="../ros2po/").run()
-            mycmd.CmdTask(f'git add . && git commit -m "{time.strftime("%Y-%m-%d-%H:%M:%S")}"',cwd="../ros2po/").run()
-            mycmd.CmdTask(f"git push origin main",cwd="../ros2po/").run()
-            print("push sucess!!")
+            db2po2.genpo(changes,"/home/ubuntu/ros2cndep/ros2server/temp/po/","/home/ubuntu/ros2cndep/ros2po/")
             time.sleep(10)
         else:
             time.sleep(1)
-
  
 
 def auto_copy():
@@ -81,7 +66,6 @@ threading.Thread(target=auto_copy).start()
 @app.route(base_url+"/get_msg",methods=["post"])
 def get_orimsg():
     ip = "0.0.0.0" # request.headers.getlist("X-Forwarded-For")[0]
-
     logger.info(f"[{ip}] {request.url} {request.data}")
     msgid = json.loads(request.data)["msgid"]
     msg = Msgs.select().where(Msgs.msgid == msgid)
@@ -130,7 +114,6 @@ def calib_msg():
     # 判断状态标记
     status = -1
     if 'status' in params: status = params['status']
-
     # 判断消息是否存在
     msg = Msgs.get(Msgs.msgid == msgid)
     result = {"msg": "msgid 不存在，请联系 fishros 官方维护者", "code": 404, "data": []}
@@ -215,8 +198,6 @@ def calib_rank():
         "data": dic_rank
     })
 
-
-
 def getData(res):
     jsonData = []
     data = {}
@@ -255,6 +236,4 @@ def next_msg():
  
 if __name__ == '__main__':
     from waitress import serve
-    # serve(app, host="0.0.0.0", port=2001)
-    #这里指定了地址和端口号。
-    app.run(host='0.0.0.0',port=2001)
+    app.run(host='0.0.0.0',port=2021)

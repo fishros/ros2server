@@ -42,7 +42,8 @@ def gen_po(changes):
         with open("temp/po/"+files[fileid]["path"],"w",encoding='utf-8') as f:
             f.write(msg_data)
 
-    with open("temp/po/README.md","w") as f:
+    version_name = ""
+    with open(f"temp/po/README.md","w") as f:
         temp= {}
         temp['changes'] = []
         for i in range(len(changes)):
@@ -50,3 +51,4 @@ def gen_po(changes):
             temp['changes'].append({"msgid":msgid,"name":name,"email":email,"github":github,"operate":operate}) 
         temp['time'] = f"{time.strftime('%Y-%m-%d-%H:%M:%S')}"
         f.write(json.dumps(temp))
+

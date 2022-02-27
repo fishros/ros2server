@@ -30,7 +30,7 @@ class Msgs(BaseModel):
     version = CharField()
 
     class Meta:
-        order_by = ('fileid',)
+        order_by = ('msgid',)
         db_table = 'msgs'
     
 class Calib(BaseModel):
@@ -68,3 +68,16 @@ class File(BaseModel):
     class Meta:
         order_by = ('fileid',)
         db_table = 'file'
+
+
+class Version(BaseModel):
+    versionid      = PrimaryKeyField()
+    # foxy/galatic/rolling
+    name   =  CharField()
+    # 20220226-22:52:00
+    code = CharField()
+    msgs   = CharField()
+
+    class Meta:
+        order_by = ('versionid',)
+        db_table = 'version'

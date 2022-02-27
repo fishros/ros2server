@@ -4,7 +4,7 @@ from peewee import *
 from datetime import datetime
 
 db = SqliteDatabase('temp/data_temp.db')
-
+ 
 class BaseModel(Model):
     create_time = DateTimeField(default=datetime.now, verbose_name='创建时间')  # 记录的创建时间
     update_time = DateTimeField(default=datetime.now, verbose_name='更新时间')  # 记录的更新时间
@@ -30,7 +30,7 @@ class Msgs(BaseModel):
     version = CharField()
 
     class Meta:
-        order_by = ('fileid',)
+        order_by = ('msgid',)
         db_table = 'msgs'
     
 class Calib(BaseModel):
@@ -68,3 +68,16 @@ class File(BaseModel):
     class Meta:
         order_by = ('fileid',)
         db_table = 'file'
+
+
+class Version(BaseModel):
+    versionid      = PrimaryKeyField()
+    # foxy/galatic/rolling
+    name   =  CharField()
+    # 20220226-22:52:00
+    code = CharField()
+    msgs   = CharField()
+
+    class Meta:
+        order_by = ('versionid',)
+        db_table = 'version'
