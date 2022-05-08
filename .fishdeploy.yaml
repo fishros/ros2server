@@ -1,0 +1,15 @@
+# fishros deploy tool 所有的操作都在工程目录进行
+name: ros2server
+tag: main
+initialize:
+  - cd databases && ln -s /root/deploy/fishdata/ros2cn/ros2.db ros2.db
+  - git clone git@github.com:fishros/ros2po.git .data/ros2po/
+pipline:
+  - echo
+stages:
+  echo:
+    - echo "Start ros2Server With 2021!!!"
+daemon:
+  command: python3 ros2server.py
+  env:
+    SERVER_PORT: 2021

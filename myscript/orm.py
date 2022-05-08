@@ -3,7 +3,7 @@
 from peewee import *
 from datetime import datetime
 
-db = SqliteDatabase('data.db')
+db = SqliteDatabase('databases/ros2.db')
  
 class BaseModel(Model):
     create_time = DateTimeField(default=datetime.now, verbose_name='创建时间')  # 记录的创建时间

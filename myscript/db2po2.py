@@ -9,7 +9,7 @@ def update_repo(popath,branch="foxy",path="../ros2po/"):
     """
     更新github仓库
     """
-    mycmd.CmdTask(f"git reset --hard && git checkout {branch}",cwd=path).run()
+    mycmd.CmdTask(f"git reset --hard && git checkout {branch} && git pull",cwd=path).run()
     mycmd.CmdTask(f"cp {popath}/* {path}").run()
     mycmd.CmdTask(f'git config --local user.name "小鱼"',cwd=path).run()
     mycmd.CmdTask(f'git config --local user.email "sangxin2014@sina.com"',cwd=path).run()

@@ -8,10 +8,10 @@ import queue
 from myscript import mycmd,db2po2
 from myscript.orm import *
 
-mycmd.CmdTask("mkdir temp && mkdir log && mkdir backup ").run()
+mycmd.CmdTask("mkdir temp").run()
 
 import spdlog
-logger = spdlog.FileLogger('calib_server', f"./log/calib_server_{time.strftime('%Y-%m-%d-%H:%M:%S')}.log", False,False)
+logger = spdlog.FileLogger('calib_server', f".data/calib_server_{time.strftime('%Y-%m-%d-%H:%M:%S')}.log", False,False)
 
 app = Flask(__name__)
 app.debug = False
@@ -43,25 +43,14 @@ def gen_po():
             changes = []
             while command_queue.qsize()>0: 
                 changes.append(command_queue.get())
-            mycmd.CmdTask(f"cp data.db temp/data_temp.db").run()
-            db2po2.genpo(changes,"/root/ros2/ros2cndep/ros2server/temp/po","/root/ros2/ros2cndep/ros2po/")
+            mycmd.CmdTask(f"cp databases/ros2.db temp/data_temp.db").run()
+            db2po2.genpo(changes,"temp/po",".data/ros2po/")
             time.sleep(10)
         else:
             time.sleep(1)
  
 
-def auto_copy():
-    # pass
-    last_copy_time = time.time()
-    while True:
-        if time.time()-last_copy_time>3600*24:
-            last_copy_time = time.time()
-            mycmd.CmdTask(f"cp nav2.db backup/nav2{time.strftime('%Y-%m-%d-%H:%M:%S')}.db").run()
-        else:
-            time.sleep(10)
-
 threading.Thread(target=gen_po).start()
-threading.Thread(target=auto_copy).start()
     
 
 # 获取指定msgid信息
@@ -246,4 +235,3 @@ def next_msg():
 if __name__ == '__main__':
     from waitress import serve
     serve(app, host="0.0.0.0", port=2021)
-    # app.run(host='0.0.0.0',port=2021)

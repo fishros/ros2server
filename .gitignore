@@ -4,3 +4,6 @@ backup/*
 *.po
 *.pyc
 *.log
+myscript/__pycache__
+.data/
+databases/ros2.db
