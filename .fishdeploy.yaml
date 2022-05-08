@@ -2,7 +2,7 @@
 name: ros2server
 tag: main
 initialize:
-  - cd databases && ln -s /root/deploy/fishdata/ros2cn/ros2.db ros2.db
+  - mkdir databases && cd databases && ln -s /root/deploy/fishdata/ros2cn/ros2.db ros2.db
   - git clone git@github.com:fishros/ros2po.git .data/ros2po/
 pipline:
   - echo
