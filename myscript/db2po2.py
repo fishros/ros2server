@@ -19,13 +19,16 @@ def update_repo(popath,branch="foxy",path="../ros2po/"):
 
 def transzh_by_status(msgid,msgen,msgzh,status,name):
     host  = "http://localhost:3000/#/home?msgid="
+    host = "http://dev.ros2.fishros.com/calibpage/#/home?msgid="
     if status==201: return msgen
     if status==0:
         user_qoute = f" `[待校准@{msgid}] <{host}{msgid}>`_ "
     elif status==200:
         user_qoute = f""
+    elif status==202:
+        user_qoute = f""
     else:
-        user_qoute = f" `[{name}@{msgid}] {host}{msgid}>`_ "
+        user_qoute = f" `[{name}@{msgid}] <{host}{msgid}>`_ "
     return msgzh+user_qoute
 
 

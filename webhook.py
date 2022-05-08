@@ -7,7 +7,7 @@ import myscript.mycmd as mycmd
 import json
 
 import spdlog
-logger = spdlog.FileLogger('webhook', f"./log/ros2/webhook_{time.strftime('%Y-%m-%d-%H:%M:%S')}.log", False,False)
+logger = spdlog.FileLogger('webhook', f"./log/webhook_{time.strftime('%Y-%m-%d-%H:%M:%S')}.log", False,False)
 
 app = Flask(__name__)
 # build 事件队列
@@ -106,24 +106,25 @@ def buildThread():
                     mycmd.CmdTask("cp -r docs/.vuepress/dist/*  /root/ros2/master/ros2cn",cwd="../ros2cn").run()
             elif repo=='ros2doc':
                 if branch=='foxy':
-                    mycmd.CmdTask("git reset --hard && git checkout develop",cwd="../ros2doc/ros2doc").run()
+                    mycmd.CmdTask("git reset --hard && git checkout foxy",cwd="../ros2doc/ros2doc").run()
                     mycmd.CmdTask("git pull",cwd="../ros2doc/ros2doc").run()
                     mycmd.CmdTask("cp -r *  /root/ros2/dev/doc",cwd="../ros2doc/ros2doc").run()
                 elif branch=='main':
                     # 部署master分支
-                    mycmd.CmdTask("git reset --hard && git checkout master",cwd="../ros2cn/ros2doc").run()
+                    mycmd.CmdTask("git reset --hard && git checkout main",cwd="../ros2cn/ros2doc").run()
                     mycmd.CmdTask("git pull",cwd="../ros2doc/ros2doc").run()
                     mycmd.CmdTask("cp -r *  /root/ros2/master/doc",cwd="../ros2doc/ros2doc").run()
             elif repo=='nav2calibpage':
-                if branch=='develop':
-                    mycmd.CmdTask("git reset --hard && git checkout develop",cwd="../nav2calibpage").run()
-                    mycmd.CmdTask("git pull",cwd="../nav2calibpage").run()
-                    mycmd.CmdTask("cp -r dist/*  /root/ros2/dev/calibpage",cwd="../nav2calibpage").run()
-                elif branch=='master':
+                path = "../nav2calibpage"
+                if branch=='master':
                     # 部署master分支
-                    mycmd.CmdTask("git reset --hard && git checkout master",cwd="../nav2calibpage").run()
-                    mycmd.CmdTask("git pull",cwd="../nav2calibpage").run()
-                    mycmd.CmdTask("cp -r dist/*  /root/ros2/master/calibpage",cwd="../nav2calibpage").run()
+                    mycmd.CmdTask("git reset --hard && git checkout master",cwd=path).run()
+                    mycmd.CmdTask("git pull",cwd=path).run()
+                    mycmd.FileUtils.find_replace("/root/ros2/ros2cndep/nav2calibpage/vite.config.ts","http://dev.nav2.fishros.com/calib","http://dev.ros2.fishros.com/calib")
+                    mycmd.CmdTask("yarn",cwd=path).run()
+                    mycmd.CmdTask("yarn build",cwd=path).run()
+                    mycmd.CmdTask("rm -rf /root/ros2/master/calibpage/* && cp -r dist/*  /root/ros2/master/calibpage",cwd=path).run()
+                    mycmd.CmdTask("rm -rf /root/ros2/dev/calibpage/* && cp -r dist/*  /root/ros2/dev/calibpage",cwd=path).run()
             runing = False
         time.sleep(0.5)
         
@@ -133,5 +134,4 @@ t1 = threading.Thread(target=buildThread)
 t1.start()
 if __name__ == "__main__":
     from waitress import serve
-    # serve(app, host="0.0.0.0", port=2000)
-    app.run(host="0.0.0.0", port='2020')
+    serve(app, host="0.0.0.0", port=2020)

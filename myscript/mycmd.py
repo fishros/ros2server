@@ -248,7 +248,7 @@ class FileUtils():
                     if re_result:
                         for key in re_result:
                             data = data.replace(key,new)
-                        with open(file_path,"w") as f:
+                        with open(file_path,"w",encoding="utf-8") as f:
                             f.write(data)
             # 遍历所有的文件夹
             for d in dirs:
@@ -260,7 +260,7 @@ class FileUtils():
             if re_result:
                 for key in re_result:
                     data = data.replace(key,new)
-                with open(file,"w") as f:
+                with open(file,"w",encoding="utf-8") as f:
                     f.write(data)
 
     @staticmethod

@@ -8,6 +8,8 @@ import queue
 from myscript import mycmd,db2po2
 from myscript.orm import *
 
+mycmd.CmdTask("mkdir temp && mkdir log && mkdir backup ").run()
+
 import spdlog
 logger = spdlog.FileLogger('calib_server', f"./log/calib_server_{time.strftime('%Y-%m-%d-%H:%M:%S')}.log", False,False)
 
@@ -42,7 +44,7 @@ def gen_po():
             while command_queue.qsize()>0: 
                 changes.append(command_queue.get())
             mycmd.CmdTask(f"cp data.db temp/data_temp.db").run()
-            db2po2.genpo(changes,"/home/ubuntu/ros2cndep/ros2server/temp/po/","/home/ubuntu/ros2cndep/ros2po/")
+            db2po2.genpo(changes,"/root/ros2/ros2cndep/ros2server/temp/po","/root/ros2/ros2cndep/ros2po/")
             time.sleep(10)
         else:
             time.sleep(1)
@@ -65,7 +67,7 @@ threading.Thread(target=auto_copy).start()
 # 获取指定msgid信息
 @app.route(base_url+"/get_msg",methods=["post"])
 def get_orimsg():
-    ip = "0.0.0.0" # request.headers.getlist("X-Forwarded-For")[0]
+    ip = request.headers.getlist("X-Forwarded-For")[0]
     logger.info(f"[{ip}] {request.url} {request.data}")
     msgid = json.loads(request.data)["msgid"]
     msg = Msgs.select().where(Msgs.msgid == msgid)
@@ -90,9 +92,11 @@ def get_orimsg():
                 temp['operate'] = log.operate
                 temp['calibmsg'] = log.calibmsg
                 if log.operate.find("mark:no_translate")>-1:
-                    temp['calibmsg'] = "将其标记为：无需翻译\n"
+                    temp['calibmsg'] = "将其标记为：无需翻译"
                 if log.operate.find("mark:title")>-1:
                     temp['calibmsg'] = "将其标记为：标题"
+                if log.operate.find("mark:no_calib")>-1:
+                    temp['calibmsg'] = "将其标记为：无需校准"
                 change_log.append(temp)
             result["change_log"] = change_log
             jsonData.append(result)
@@ -102,7 +106,7 @@ def get_orimsg():
 # 校准指定 msgid 信息
 @app.route(base_url+'/calib_msg', methods=["post"])
 def calib_msg():
-    ip = "0.0.0.0" # request.headers.getlist("X-Forwarded-For")[0]
+    ip = request.headers.getlist("X-Forwarded-For")[0]
     logger.info(f"[{ip}] {request.url} {request.data}")
     # 加载请求数据
     params = json.loads(request.data)
@@ -128,9 +132,13 @@ def calib_msg():
             result = {"msg": "该段落已被标记为标题", "code": -1, "data": []}
         elif status==201:
             result = {"msg": "该段落已被标记为无需翻译", "code": -1, "data": []}
+        elif status==202:
+            result = {"msg": "该段落已被标记为无需校准", "code": -1, "data": []}
         else:
             result = {"msg": "该段落已被标记", "code": -1, "data": []}
         return make_reponse_header(result)
+            
+    if status==202 and msg_status!=0:  result = {"msg": "该段落已经被校准。只有没有被校准过的段落才能标记无需校准。", "code": -1, "data": []}
 
     # 用户是否存在
     calibcount  = 0
@@ -154,12 +162,13 @@ def calib_msg():
     elif status==201: 
         operate= "mark:no_translate"
         msg_status = 201
+    elif status==202: 
+        operate= "mark:no_calib"
+        msg_status = 202
     else: 
         operate = f"update:{msgid}|{msg_length}"  
-        if msg_status>=200:
-            msg_status=1
-        else:
-            msg_status += 1
+        if msg_status>=200: msg_status=1
+        else: msg_status += 1
 
     # 插入并更新
     calib = Calib.insert(calibmsg= calibmsg, calibemail = email, msgid = msgid, operate=operate ).execute()
@@ -212,7 +221,7 @@ def getData(res):
 # 下一条翻译
 @app.route(base_url+'/next_msg',methods=['get'])
 def next_msg():
-    ip = "0.0.0.0" # request.headers.getlist("X-Forwarded-For")[0]
+    ip = request.headers.getlist("X-Forwarded-For")[0]
 
     return_dict = {'code': 200, 'msg': '处理成功', 'data': None}
     msgid = int(request.args.to_dict()['msgid'])
@@ -236,4 +245,5 @@ def next_msg():
  
 if __name__ == '__main__':
     from waitress import serve
-    app.run(host='0.0.0.0',port=2021)
+    serve(app, host="0.0.0.0", port=2021)
+    # app.run(host='0.0.0.0',port=2021)
