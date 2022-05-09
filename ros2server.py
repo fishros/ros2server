@@ -189,7 +189,8 @@ def calib_rank():
                 temp['github']=row[1]
                 temp['p_count']=row[4]
                 temp['word_count']=row[3]
-                dic_rank.append(temp)
+                if temp['name']!='小鱼小鱼':
+                    dic_rank.append(temp)
     return make_reponse_header({
         "msg": "查询成功",
         "code": 200,
