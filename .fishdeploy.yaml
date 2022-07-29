@@ -10,6 +10,9 @@ stages:
   echo:
     - echo "Start ros2Server With 2021!!!"
 daemon:
-  command: python3 ros2server.py
+  command: 
+  - docker stop ros2server
+  - docker run -dit --name ros2server --rm -v /root/.ssh:/root/.ssh -v /root/deploy:/root/deploy -v `pwd`:`pwd` -w `pwd` -p 2021:2021 fishros2/python-flask:latest  python3 ros2server.py
+
   env:
     SERVER_PORT: 2021
